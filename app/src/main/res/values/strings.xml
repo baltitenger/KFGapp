@@ -2,8 +2,8 @@
     <string name="app_name">KFG app</string>
 
     <string name="naplo_url">https://naplo.karinthy.hu</string>
-    <string name="api_url">https://admin.karinthy.hu/api</string>
-    <string name="api_accounts">accounts</string>
+    <string name="api_url">https://admin.karinthy.hu/api/%s</string>
+    <string name="api_endpoing_accounts">accounts</string>
 
     <!-- Strings related to authenticator -->
     <string name="account_type">hu.karinthy</string>

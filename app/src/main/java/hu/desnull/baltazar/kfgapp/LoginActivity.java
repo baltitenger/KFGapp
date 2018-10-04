@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -33,6 +34,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.function.ToDoubleBiFunction;
@@ -197,7 +199,7 @@ public class LoginActivity extends AppCompatActivity {
             InputStream input;
             HttpsURLConnection con = null;
             try {
-                URL url = new URL("https://admin.karinthy.hu/api/access-tokens");
+                URL url = new URL(getString(R.string.api_url, getString(R.string.api_endpoing_accounts)));
                 con = (HttpsURLConnection) url.openConnection();
                 con.setRequestMethod("POST");
                 con.setRequestProperty("Content-Type", "application/json");
@@ -219,11 +221,13 @@ public class LoginActivity extends AppCompatActivity {
                 String jsonText = readAll(rd);
                 JSONObject json = new JSONObject(jsonText);
 
+                System.out.println(json);
+
                 if (json.getBoolean("success")) {
                     return json.getString("accessToken");
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "doInBackground: error", e);
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
             } finally {
                 if (con != null) {
                     con.disconnect();
@@ -237,7 +241,7 @@ public class LoginActivity extends AppCompatActivity {
             mAuthTask = null;
             showProgress(false);
             if (accessToken == null) {
-                Account account = new Account(mUsername, getString(R.string.naplo_url));
+                Account account = new Account(mUsername, getString(R.string.account_type));
                 mAccountManager.addAccountExplicitly(account, mPassword, null);
                 //Intent intent = new Intent(AccountManager.KEY_ACCOUNT_MANAGER_RESPONSE);
                 //setResult(RESULT_OK, );
