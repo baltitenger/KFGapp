@@ -5,14 +5,11 @@ import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.renderscript.ScriptGroup;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -23,25 +20,20 @@ import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.function.ToDoubleBiFunction;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * A login screen that offers login via username/password.
@@ -94,6 +86,8 @@ public class LoginActivity extends AppCompatActivity {
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        mUsernameView.requestFocus();
     }
 
     /**
@@ -183,7 +177,7 @@ public class LoginActivity extends AppCompatActivity {
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, String> {
+    public class UserLoginTask extends AsyncTask<Void, Void, JSONObject> {
 
         private final String mUsername;
         private final String mPassword;
@@ -195,21 +189,27 @@ public class LoginActivity extends AppCompatActivity {
 
 
         @Override
-        protected String doInBackground(Void... args) {
+        protected JSONObject doInBackground(Void... args) {
             InputStream input;
             HttpsURLConnection con = null;
+            OutputStream out;
             try {
-                URL url = new URL(getString(R.string.api_url, getString(R.string.api_endpoing_accounts)));
+                URL url = new URL(getString(R.string.api_url, getString(R.string.api_endpoint_access_tokens)));
                 con = (HttpsURLConnection) url.openConnection();
                 con.setRequestMethod("POST");
                 con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
 
-                String params = String.format("{username:%s,password:%s}", mUsername, mPassword);
-                con.setDoOutput(true);
-                DataOutputStream dos = new DataOutputStream(con.getOutputStream());
-                dos.writeBytes(params);
-                dos.flush();
-                dos.close();
+                String params = getString(R.string.api_authenticate, mUsername, mPassword);
+                out = new BufferedOutputStream(con.getOutputStream());
+
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+                writer.write(params);
+                writer.flush();
+                writer.close();
+                out.close();
+
+                con.connect();
 
                 int responseCode = con.getResponseCode();
                 if (responseCode != 201) {
@@ -221,11 +221,7 @@ public class LoginActivity extends AppCompatActivity {
                 String jsonText = readAll(rd);
                 JSONObject json = new JSONObject(jsonText);
 
-                System.out.println(json);
-
-                if (json.getBoolean("success")) {
-                    return json.getString("accessToken");
-                }
+                return json;
             } catch (IOException | JSONException e) {
                 e.printStackTrace();
             } finally {
@@ -237,16 +233,20 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(final String accessToken) {
+        protected void onPostExecute(final JSONObject response) {
             mAuthTask = null;
             showProgress(false);
-            if (accessToken == null) {
-                Account account = new Account(mUsername, getString(R.string.account_type));
-                mAccountManager.addAccountExplicitly(account, mPassword, null);
-                //Intent intent = new Intent(AccountManager.KEY_ACCOUNT_MANAGER_RESPONSE);
-                //setResult(RESULT_OK, );
-                finish();
-            } else {
+            try {
+                if (response.getBoolean("success")) {
+                    Account account = new Account(mUsername, getString(R.string.account_type));
+                    mAccountManager.addAccountExplicitly(account, mPassword, null);
+                    //Intent intent = new Intent(AccountManager.KEY_ACCOUNT_MANAGER_RESPONSE);
+                    //setResult(RESULT_OK, );
+                    finish();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } finally {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
             }
