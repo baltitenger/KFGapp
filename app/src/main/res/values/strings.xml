@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">KFG app</string>
+
+    <string name="naplo_url">https://naplo.karinthy.hu</string>
+    <string name="api_url">https://admin.karinthy.hu/api</string>
+    <string name="api_accounts">accounts</string>
+
+    <!-- Strings related to authenticator -->
+    <string name="account_type">hu.karinthy</string>
+    <string name="title_fmt">title</string>
+    <string name="key1_action">action</string>
+    <string name="key1_summary">summary</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_username">Username</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+</resources>
